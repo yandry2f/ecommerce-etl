@@ -1,0 +1,316 @@
+
+# =============================================================================
+# CONFIGURACIÓN DEL SISTEMA ETL - E-COMMERCE UNIFICADO
+# =============================================================================
+# 
+# Este archivo contiene todas las configuraciones necesarias para el sistema ETL
+# que unifica datos de e-commerce online (SQL Server) y offline (Excel).
+# 
+# ⚠️  IMPORTANTE: Reemplazar todos los valores placeholder con datos reales
+# 🔒 SEGURIDAD: Usar variables de entorno para credenciales sensibles
+# 
+# Autor: Sinergia Digital
+# Fecha: Junio 2025
+# Versión: 1.0.3
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE BASES DE DATOS
+# -----------------------------------------------------------------------------
+databases:
+  # SQL Server (Fuente: E-commerce Online)
+  sql_server:
+    host: "sql-server-host.empresa.com"
+    port: 1433
+    database: "ecommerce_online"
+    user: "etl_user"
+    password: "${SQL_SERVER_PASSWORD}"  # Variable de entorno
+    driver: "ODBC Driver 17 for SQL Server"
+    timeout: 30
+    pool_size: 5
+    
+  # PostgreSQL (Destino: Data Warehouse)
+  postgresql:
+    host: "postgres-dw.empresa.com"
+    port: 5432
+    database: "data_warehouse"
+    user: "etl_loader"
+    password: "${POSTGRES_PASSWORD}"  # Variable de entorno
+    schema: "public"
+    timeout: 30
+    pool_size: 10
+    max_overflow: 20
+
+# -----------------------------------------------------------------------------
+# FUENTES DE DATOS
+# -----------------------------------------------------------------------------
+data_sources:
+  # Archivo Excel (Fuente: Compras Offline)
+  excel:
+    file_path: "/data/input/compras_offline.xlsx"
+    sheet_name: "Compras"  # Nombre de la hoja o índice (0, 1, 2...)
+    header_row: 0  # Fila de encabezados (base 0)
+    
+    # Mapeo de columnas Excel a nombres estándar
+    column_mapping:
+      "CI Cliente": "ci"
+      "Nombre Completo": "nombre_cliente"
+      "Email Cliente": "email"
+      "Teléfono": "telefono"
+      "Ciudad": "ciudad"
+      "Fecha Compra": "fecha_compra"
+      "Total Compra": "total_compra"
+      "Cantidad Items": "cantidad_items"
+      "Método Pago": "metodo_pago"
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN ETL
+# -----------------------------------------------------------------------------
+etl_settings:
+  # Procesamiento en lotes
+  chunk_size: 10000  # Registros por chunk para optimizar memoria
+  batch_size: 5000   # Registros por batch para inserción
+  
+  # Paralelización
+  max_workers: 4     # Número máximo de procesos paralelos
+  
+  # Reintentos
+  max_retries: 3     # Reintentos por operación
+  retry_delay: 2.0   # Segundos entre reintentos
+  
+  # Tiempo límite
+  extraction_timeout: 1800  # 30 minutos
+  transformation_timeout: 3600  # 60 minutos
+  loading_timeout: 1800  # 30 minutos
+
+# -----------------------------------------------------------------------------
+# REGLAS DE NEGOCIO
+# -----------------------------------------------------------------------------
+business_rules:
+  # Cliente Activo
+  dias_cliente_activo: 90  # Días para considerar cliente activo
+  
+  # Deduplicación de Clientes
+  merge_rules:
+    nombre: "longer_value"      # online_priority, offline_priority, longer_value, most_recent
+    email: "online_priority"
+    telefono: "offline_priority"
+    ciudad: "online_priority"
+    direccion: "online_priority"
+  
+  # Validaciones de Negocio
+  min_compra_valida: 0.01  # Monto mínimo para compra válida
+  max_compra_valida: 100000  # Monto máximo para compra válida
+  
+  # Categorización de Clientes
+  cliente_vip_threshold: 50000  # Monto para cliente VIP
+  cliente_frecuente_threshold: 10  # Compras para cliente frecuente
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE LOGGING
+# -----------------------------------------------------------------------------
+logging:
+  # Nivel de logging: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Directorio y archivo de logs
+  log_dir: "/logs/etl"
+  filename: "etl_ecommerce.log"
+  
+  # Rotación de archivos
+  max_size_mb: 10        # Tamaño máximo por archivo
+  backup_count: 5        # Número de archivos de backup
+  
+  # Salida
+  console_output: true   # Mostrar logs en consola
+  
+  # Formato personalizado
+  format: "%(asctime)s | %(levelname)8s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+# -----------------------------------------------------------------------------
+# REGLAS DE VALIDACIÓN
+# -----------------------------------------------------------------------------
+validation_rules:
+  # Mínimo de registros esperados por tabla
+  min_rows:
+    clientes: 100
+    pedidos: 500
+    productos: 50
+    pedido_items: 1000
+    pagos: 500
+    excel_data: 10
+  
+  # Porcentajes máximos de valores nulos permitidos
+  max_null_percentage:
+    ci: 0.01          # Máximo 1% de CIs nulos
+    nombre: 0.05      # Máximo 5% de nombres nulos
+    email: 0.10       # Máximo 10% de emails nulos
+    total_compra: 0.0 # 0% de totales nulos
+  
+  # Rangos válidos
+  valid_ranges:
+    total_compra:
+      min: 0.01
+      max: 100000
+    cantidad_items:
+      min: 1
+      max: 100
+    dias_ultima_compra:
+      min: 0
+      max: 3650  # 10 años
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE TABLAS DESTINO
+# -----------------------------------------------------------------------------
+target_tables:
+  dim_clientes:
+    name: "dim_clientes"
+    truncate_before_load: true
+    create_indexes: true
+    indexes:
+      - "CREATE INDEX IF NOT EXISTS idx_clientes_ci ON dim_clientes(ci)"
+      - "CREATE INDEX IF NOT EXISTS idx_clientes_activo ON dim_clientes(cliente_activo)"
+      - "CREATE INDEX IF NOT EXISTS idx_clientes_canales ON dim_clientes(canales)"
+  
+  fact_compras:
+    name: "fact_compras"
+    truncate_before_load: true
+    create_indexes: true
+    indexes:
+      - "CREATE INDEX IF NOT EXISTS idx_compras_ci ON fact_compras(ci)"
+      - "CREATE INDEX IF NOT EXISTS idx_compras_fecha ON fact_compras(fecha_compra)"
+      - "CREATE INDEX IF NOT EXISTS idx_compras_canal ON fact_compras(canal)"
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE MONITOREO
+# -----------------------------------------------------------------------------
+monitoring:
+  # Métricas a calcular
+  calculate_metrics: true
+  
+  # Alertas
+  alerts:
+    enabled: true
+    email_recipients:
+      - "data-team@empresa.com"
+      - "etl-admin@empresa.com"
+    
+    # Umbrales para alertas
+    thresholds:
+      min_records_processed: 1000
+      max_processing_time_hours: 2
+      max_error_rate_percent: 5
+  
+  # Dashboard
+  dashboard:
+    enabled: false
+    endpoint: "http://monitoring-dashboard.empresa.com/etl"
+    api_key: "${DASHBOARD_API_KEY}"
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE PROGRAMACIÓN (SCHEDULER)
+# -----------------------------------------------------------------------------
+scheduler:
+  # Configuración para cron job
+  cron_expression: "0 2 * * *"  # Diario a las 2:00 AM
+  timezone: "America/Bogota"
+  
+  # Días de ejecución
+  execution_days:
+    monday: true
+    tuesday: true
+    wednesday: true
+    thursday: true
+    friday: true
+    saturday: true
+    sunday: false  # No ejecutar domingos
+  
+  # Configuración de reintentos para scheduler
+  max_schedule_retries: 2
+  retry_interval_minutes: 30
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE DESARROLLO Y DEBUG
+# -----------------------------------------------------------------------------
+development:
+  # Modo debug
+  debug_mode: false
+  
+  # Límites para desarrollo (usar samples pequeños)
+  sample_data:
+    enabled: false
+    max_records: 1000
+  
+  # Salto de validaciones en desarrollo
+  skip_validations: false
+  
+  # Directorio de archivos temporales
+  temp_directory: "/tmp/etl_ecommerce"
+  
+  # Conservar archivos intermedios
+  keep_intermediate_files: false
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE SEGURIDAD
+# -----------------------------------------------------------------------------
+security:
+  # Encriptación de conexiones
+  encrypt_connections: true
+  
+  # Validación de certificados SSL
+  verify_ssl_certs: true
+  
+  # Timeout para conexiones
+  connection_timeout: 30
+  
+  # Máscara para datos sensibles en logs
+  mask_sensitive_data: true
+  sensitive_fields:
+    - "password"
+    - "email"
+    - "telefono"
+    - "ci"
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN DE PERFORMANCE
+# -----------------------------------------------------------------------------
+performance:
+  # Configuración de memoria
+  memory_limit_gb: 8
+  
+  # Configuración de paralelización
+  parallel_processing: true
+  max_concurrent_connections: 5
+  
+  # Configuración de cache
+  enable_cache: false
+  cache_ttl_seconds: 3600
+  
+  # Optimización de queries
+  use_query_optimization: true
+  query_timeout_seconds: 300
+
+# =============================================================================
+# NOTAS DE CONFIGURACIÓN
+# =============================================================================
+#
+# 1. Variables de Entorno:
+#    - SQL_SERVER_PASSWORD: Password para SQL Server
+#    - POSTGRES_PASSWORD: Password para PostgreSQL
+#    - DASHBOARD_API_KEY: API Key para dashboard de monitoreo
+#
+# 2. Directorios:
+#    - Asegurar que /data/input/ existe y tiene permisos de lectura
+#    - Asegurar que /logs/etl/ existe y tiene permisos de escritura
+#
+# 3. Configuración de Red:
+#    - Verificar conectividad a hosts de bases de datos
+#    - Configurar firewalls para puertos especificados
+#
+# 4. Customización:
+#    - Ajustar chunk_size según memoria disponible
+#    - Modificar business_rules según requerimientos específicos
+#    - Personalizar validation_rules según calidad de datos esperada
+#
+# =============================================================================

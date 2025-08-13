@@ -1,0 +1,192 @@
+
+# =============================================================================
+# DEPENDENCIAS DEL SISTEMA ETL E-COMMERCE UNIFICADO
+# =============================================================================
+# 
+# Este archivo contiene todas las librerías Python requeridas para el
+# funcionamiento completo del sistema ETL que unifica datos de e-commerce
+# online (SQL Server) y offline (Excel) hacia PostgreSQL.
+#
+# Instalación:
+#   pip install -r requirements.txt
+#
+# Instalación en entorno virtual (recomendado):
+#   python -m venv etl_env
+#   source etl_env/bin/activate  # Linux/Mac
+#   etl_env\Scripts\activate     # Windows
+#   pip install -r requirements.txt
+#
+# Autor: Sinergia Digital
+# Fecha: Junio 2025
+# Versión: 1.0.3
+# Python: 3.8+
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# LIBRERÍAS PRINCIPALES DE PROCESAMIENTO DE DATOS
+# -----------------------------------------------------------------------------
+
+# Pandas - Manipulación y análisis de datos
+pandas>=1.5.0
+
+# NumPy - Computación científica y arrays
+numpy>=1.21.0
+
+# -----------------------------------------------------------------------------
+# CONECTIVIDAD DE BASES DE DATOS
+# -----------------------------------------------------------------------------
+
+# SQLAlchemy - ORM y abstracción de bases de datos
+SQLAlchemy>=1.4.0
+
+# PostgreSQL - Conector para base de datos destino
+psycopg2-binary>=2.9.0
+
+# SQL Server - Conector ODBC para SQL Server
+pyodbc>=4.0.32
+
+# -----------------------------------------------------------------------------
+# PROCESAMIENTO DE ARCHIVOS
+# -----------------------------------------------------------------------------
+
+# OpenPyXL - Lectura/escritura de archivos Excel (.xlsx)
+openpyxl>=3.0.9
+
+# XlsxWriter - Escritura optimizada de archivos Excel (opcional)
+xlsxwriter>=3.0.3
+
+# -----------------------------------------------------------------------------
+# CONFIGURACIÓN Y LOGGING
+# -----------------------------------------------------------------------------
+
+# PyYAML - Procesamiento de archivos de configuración YAML
+PyYAML>=6.0
+
+# -----------------------------------------------------------------------------
+# UTILIDADES Y HELPERS
+# -----------------------------------------------------------------------------
+
+# Python-dateutil - Parsing y manipulación de fechas
+python-dateutil>=2.8.0
+
+# Requests - HTTP requests para APIs (si se necesita)
+requests>=2.28.0
+
+# Rich - Output enriquecido en terminal (opcional para logs coloridos)
+rich>=12.0.0
+
+# Click - CLI interface (para versiones futuras)
+click>=8.0.0
+
+# -----------------------------------------------------------------------------
+# DESARROLLO Y TESTING (OPCIONAL)
+# -----------------------------------------------------------------------------
+
+# Pytest - Framework de testing
+pytest>=7.0.0
+
+# Pytest-cov - Coverage de tests
+pytest-cov>=4.0.0
+
+# Black - Formateo de código
+black>=22.0.0
+
+# Flake8 - Linting de código
+flake8>=5.0.0
+
+# MyPy - Type checking estático
+mypy>=0.991
+
+# -----------------------------------------------------------------------------
+# MONITOREO Y OBSERVABILIDAD (OPCIONAL)
+# -----------------------------------------------------------------------------
+
+# APScheduler - Programación de tareas
+APScheduler>=3.9.0
+
+# Prometheus-client - Métricas para monitoring
+prometheus-client>=0.15.0
+
+# -----------------------------------------------------------------------------
+# PERFORMANCE Y OPTIMIZACIÓN (OPCIONAL)
+# -----------------------------------------------------------------------------
+
+# Psutil - Información del sistema y monitoreo de recursos
+psutil>=5.9.0
+
+# Memory-profiler - Profiling de memoria
+memory-profiler>=0.60.0
+
+# -----------------------------------------------------------------------------
+# SEGURIDAD (OPCIONAL)
+# -----------------------------------------------------------------------------
+
+# Cryptography - Encriptación de credenciales
+cryptography>=37.0.0
+
+# Python-dotenv - Manejo de variables de entorno
+python-dotenv>=0.20.0
+
+# =============================================================================
+# NOTAS DE INSTALACIÓN
+# =============================================================================
+#
+# 1. DRIVERS DE BASES DE DATOS:
+#    - Para SQL Server en Linux: Instalar Microsoft ODBC Driver
+#      https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server
+#    
+#    - Para PostgreSQL: psycopg2-binary incluye librerías necesarias
+#
+# 2. DEPENDENCIAS DEL SISTEMA:
+#    Ubuntu/Debian:
+#      sudo apt-get update
+#      sudo apt-get install python3-dev build-essential
+#      sudo apt-get install unixodbc-dev
+#    
+#    CentOS/RHEL:
+#      sudo yum install python3-devel gcc
+#      sudo yum install unixODBC-devel
+#
+# 3. PROBLEMAS COMUNES:
+#    - Error con psycopg2: Usar psycopg2-binary en su lugar
+#    - Error con pyodbc: Verificar instalación de ODBC drivers
+#    - Error con openpyxl: pip install --upgrade setuptools
+#
+# 4. VERSIONES MÍNIMAS:
+#    - Python 3.8+ (recomendado 3.9+)
+#    - pip 21.0+
+#    - setuptools 50.0+
+#
+# 5. ENTORNOS ESPECIALIZADOS:
+#    Para producción, considere:
+#    - Usar poetry o pipenv para gestión de dependencias
+#    - Fixar versiones exactas para reproducibilidad
+#    - Crear requirements-dev.txt separado para desarrollo
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# VERSIONES ALTERNATIVAS PARA COMPATIBILIDAD
+# -----------------------------------------------------------------------------
+
+# Si tiene problemas con las versiones más recientes, use estas alternativas:
+
+# pandas==1.3.5      # Para Python 3.7 compatibility
+# numpy==1.21.6      # Para Python 3.7 compatibility  
+# SQLAlchemy==1.4.46 # Versión estable ampliamente probada
+# PyYAML==6.0        # Versión estable sin vulnerabilidades
+
+# =============================================================================
+# COMANDOS DE VERIFICACIÓN POST-INSTALACIÓN
+# =============================================================================
+#
+# Después de instalar, verificar que todo funciona:
+#
+# python -c "import pandas; print(f'Pandas: {pandas.__version__}')"
+# python -c "import sqlalchemy; print(f'SQLAlchemy: {sqlalchemy.__version__}')"
+# python -c "import psycopg2; print(f'psycopg2: {psycopg2.__version__}')"
+# python -c "import pyodbc; print(f'pyodbc: {pyodbc.version}')"
+# python -c "import openpyxl; print(f'openpyxl: {openpyxl.__version__}')"
+# python -c "import yaml; print(f'PyYAML: {yaml.__version__}')"
+#
+# =============================================================================

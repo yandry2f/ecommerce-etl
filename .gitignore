@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+.venv/
+venv/
+.env.*
+.envrc
+
+# IDEs/OS
+.vscode/
+.idea/
+.DS_Store
+
+# Tests/coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data/output
+logs/
+tmp/
+outputs/
+
+# Config sensibles (ajusta según tu caso)
+config.yaml
